@@ -1,0 +1,61 @@
+services:
+  adguard:
+    image: adguard/adguardhome:v0.107.52
+    ports:
+      # DNS
+      - 53:53/tcp
+      - 53:53/udp
+      
+      # DHCP
+      - 67:67/udp
+      - 68:68/udp
+
+      # DNS-over-HTTPS
+      - 80:80/tcp
+      - 443:443/tcp
+      - 443:443/udp
+      
+      # Admin Panel
+      - 3000:3000/tcp
+      
+      # DNS-over-TLS
+      - 853:853/tcp
+      # DNS-over-QUIC
+      - 853:853/udp
+
+      # DNSCrypt
+      - 5443:5443/tcp
+      - 5443:5443/udp
+
+      # Debugging profiles
+      - 6060:6060/tcp
+    networks:
+      - dns
+    volumes:
+      - ./work:/opt/adguardhome/work
+      - ./conf:/opt/adguardhome/conf
+
+    restart: unless-stopped
+    
+    depends_on:
+      - unbound
+
+  unbound:
+    container_name: unbound
+    image: "mvance/unbound:1.12.0"
+    expose:
+      - "53"
+    networks:
+      - dns
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+    volumes:
+      - "/data/unbound/my_conf/forward-records.conf:/opt/unbound/etc/unbound/forward-records.conf"
+      - "/data/unbound/my_conf/a-records.conf:/opt/unbound/etc/unbound/a-records.conf"
+    restart: unless-stopped
+
+
+networks:
+  dns:
+
